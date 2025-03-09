@@ -7,7 +7,7 @@ This is a C++ program for managing a library system. It allows users (students, 
 ### Compile the Program:
 Use a C++ compiler to compile the program. For example:
 ```bash
-g++ -o library_management main.cpp
+g++ -o library_management.cpp
 ```
 
 ### Run the Program:
