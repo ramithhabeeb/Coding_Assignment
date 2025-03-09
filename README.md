@@ -25,11 +25,13 @@ Execute the compiled program:
 
 ### Book Management:
 - Add new books to the library.
+- Delete a book from the library
 - Borrow and return books.
 - View the status of books (available/borrowed).
 
 ### User Management:
 - Add new users (students, faculty, or librarians).
+- Delete a User from the library
 - View borrowed books and borrowing history.
 - Pay fines (for students).
 
@@ -39,8 +41,7 @@ Execute the compiled program:
 ## Usage Guide
 
 ### Initial Setup:
-- When you run the program for the first time, it will load data from `library.txt` (if the file exists).
-- If the file does not exist, the program will start with an empty library.
+- When you run the program for the first time, it will load data from `library.txt`.
 
 ### Main Menu:
 When you run the program, you will see the following menu:
@@ -140,11 +141,11 @@ Book:Book1,Author1,Publisher1,2000,ISBN1,Borrowed,1739145600,1741533402
 
 ### Users:
 ```bash
-User:Name,ID,Role,FineAmount,FineCalDate
+User:Name,ID,Role,FineAmount
 ```
 **Example:**
 ```bash
-User:Student1,S1,Student,0,1741533408
+User:Student1,S1,Student,0
 ```
 
 ### Borrowed Books:
@@ -157,7 +158,7 @@ Borrowed Books:S1,ISBN1
 ```
 ### Borrowing History:
 ```bash
-Borrowed History:UserID,ISBN
+Borrowing History:UserID,ISBN
 ```
 **Example:**
 ```bash
