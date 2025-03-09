@@ -1,6 +1,6 @@
 # Library Management System
 
-This is a C++ program for managing a library system. It allows users (students, faculty, and librarians) to borrow and return books, manage fines, and view their borrowing history. Librarians can add new books and users to the system.
+This is a C++ program for managing a library system. It allows users (students, faculty) to borrow and return books, manage fines, and view their borrowing history. Librarians can manage books and users in the system.
 
 ## Compilation and Execution
 
@@ -92,10 +92,14 @@ Menu Options:
 2. Display all books
 3. Add a book
 4. Add a user
+5. Delete a Book
+6. Delete a User
 ```
 - **Display all books**: View all books in the library.
 - **Add a book**: Add a new book to the library by entering its details.
 - **Add a user**: Add a new user (student, faculty, or librarian) to the system.
+- **Delete a book**: Deletes a book from the library by entering its ISBN.
+- **Add a user**: Deletes a user (student, faculty, or librarian) from the system by entering their User ID.
 
 ### Exit:
 Choose **Exit** from the main menu to save the library state and exit the program.
@@ -150,6 +154,14 @@ Borrowed Books:UserID,ISBN
 **Example:**
 ```bash
 Borrowed Books:S1,ISBN1
+```
+### Borrowing History:
+```bash
+Borrowed History:UserID,ISBN
+```
+**Example:**
+```bash
+Borrowing History:S1,ISBN1
 ```
 
 
