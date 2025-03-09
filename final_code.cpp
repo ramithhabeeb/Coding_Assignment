@@ -90,34 +90,113 @@ class book{
             cin>>status;
         }
 };
-// class User{
-//     protected:
-//         string name;
-//         string id;
-//         string role;
-//     public:
-//         void set_name(string x){name=x;}
-//         void set_id(string x){id=x;}
-//         void set_role(string x){role=x;}
-//         string get_name(){ return name;}
-//         string get_id(){ return id;}
-//         string get_role(){ return role;}
-//         virtual Account* get_account(){}=0;
-//         User(){}
-//         User(string name,string id,string role){
-//             this->name=name;
-//             this->id=id;
-//             this->role=role;
-//         }
-//         virtual void displayInfo() const {
-//             cout << "ID: " << id << ", Name: " << name << ", Role: " << role << endl;
-//         }
-// };
-class User{
+
+class Account{
+    public:
+        vector<book*> bd_books;
+        vector<book*> br_history;
+        int fineamount;
+        time_t finecaldate;
+
+        Account(){
+            this->fineamount=0;
+            finecaldate=0;
+        }
+        Account(int fine,time_t date){
+            fineamount=fine;
+            finecaldate=date;
+        }
+
+        vector<book*>& get_br_history() {return br_history;}
+        vector<book*>& get_bd_books() {return bd_books;}
+        int getFineAmount() const { return fineamount;}
+        time_t getFinecaldate() const { return finecaldate;}
+
+        void SetFineAmount(int fa) { fineamount=fa;}
+        void SetFinecaldate(time_t date) {finecaldate=date;}
+
+        void payFines(int finerate) {
+            calculate_fines(finerate);
+            cout<<"Amount to be paid is: "<< fineamount<<endl;
+            int x;
+            cout << "Enter amount to pay: ";
+            cin>>x;
+            fineamount -=x ;
+        }
+        void calculate_fines(int finerate) {
+            time_t now = time(NULL);
+            finecaldate = now;
+        
+            for (auto it : bd_books) {
+                // Check if the book is overdue
+                int overdue_days = date_diff(it->get_borrowdate(), finecaldate) - 15;
+                if (overdue_days > 0) {
+                    // Case 1: Book has a return date set and was overdue before returning
+                    if (it->get_returndate() != 0 && date_diff(it->get_borrowdate(), it->get_returndate()) > 15) {
+                        fineamount += finerate * date_diff(it->get_returndate(), finecaldate);
+                    }
+                    // Case 2: Book is still not returned and overdue
+                    else if (it->get_returndate() == 0) {
+                        fineamount += finerate * overdue_days;
+                    }
+                }
+        
+                // Update return date only if the book is still not returned
+                if (it->get_returndate() == 0) {
+                    it->set_returndate(finecaldate);
+                }
+            }
+        }
+        
+        void showFines(int finerate) {
+            calculate_fines(finerate);
+            cout << "Fine anount: " << fineamount << " rupees." << endl;
+        }
+        void displayBorrowedBooks() const {
+            if(bd_books.size()==0){
+                cout<<"No books borrowed currently"<<endl;
+                return;
+            }
+            cout << "Borrowed Books:" << endl;
+            for (const auto& book : bd_books) {
+                book->displayInfo();
+            }
+        }
+        void displayBorrowHistory() const{
+            if(bd_books.size()==0){
+                cout<<"No history to Show"<<endl;
+                return;
+            }
+            cout << "Brrowed Book History:" << endl;
+            for (const auto& book : br_history) {
+                book->displayInfo();
+            }
+        }
+};
+class AllUser{
     protected:
         string name;
         string id;
         string role;
+    public:
+        AllUser(string name, string id, string role){
+            this->name=name;
+            this->id=id;
+            this->role=role;
+        }
+        AllUser(){}
+        void set_name(string x){name=x;}
+        void set_id(string x){id=x;}
+        void set_role(string x){role=x;}
+        string get_name(){ return name;}
+        string get_id(){ return id;}
+        string get_role(){ return role;}
+        void displayInfo() const {
+            cout << "Name: " << name << ", ID: " << id << ", Role: " << role << endl;
+        }
+};
+class User:public AllUser{
+    protected:
         Account* account;
     public:
         int maxbooks;
@@ -127,17 +206,6 @@ class User{
         int get_maxdays(){return maxdays;}
         int get_finerate(){return finerate;}
 
-        void set_name(string x){name=x;}
-        void set_id(string x){id=x;}
-        void set_role(string x){role=x;}
-        string get_name(){ return name;}
-        string get_id(){ return id;}
-        string get_role(){ return role;}
-
-        virtual void displayInfo() const {
-            cout << "ID: " << id << ", Name: " << name << ", Role: " << role << endl;
-        }
-
         Account * get_account(){ return account;}
         
         User(string name, string id, string role){
@@ -145,6 +213,12 @@ class User{
             this->id=id;
             this->role=role;
             account = new Account();
+        }
+        User(string name, string id, string role,int fineamount,time_t finecaldate){
+            this->name=name;
+            this->id=id;
+            this->role=role;
+            account = new Account(fineamount,finecaldate);
         }
         User(){
             account = new Account();
@@ -170,6 +244,11 @@ class faculty:public User{
             maxdays=30;
             finerate=0;
         }
+        faculty(string name,string id,int fineamt,time_t finecal):User(name,id, "Faculty",fineamt,finecal){
+            maxbooks=5;
+            maxdays=30;
+            finerate=0;
+        }
         int getmaxbooks(){return maxbooks;}
         int getmaxdays(){return maxdays;}
         void borrowBook(book* bk) {
@@ -179,7 +258,6 @@ class faculty:public User{
             if (account->bd_books.size() >= maxbooks) {
                 cout << "Faculty cannot borrow more than " << maxbooks<< " books." << endl;
                 return;}
-            account->calculate_fines(finerate);
             for(auto it: account->bd_books){
                 if(date_diff(it->get_borrowdate(),it->get_returndate())>30){
                     cout << "You have over due books" << endl;
@@ -188,6 +266,8 @@ class faculty:public User{
             }
             bk->set_status("Borrowed");
             time_t now = time(0);
+            bk->set_borrowdate(now);
+            bk->set_returndate(now);
             account->bd_books.push_back(bk);
             cout << "Book borrowed successfully." << endl;
         }
@@ -196,8 +276,9 @@ class faculty:public User{
             for (; it != account->bd_books.end(); ++it) {
                 if (*it == bk) {
                     break;}}
-    
             bk->set_status("Available");
+            bk->set_borrowdate(0);
+            bk->set_returndate(0);
             account->br_history.push_back(bk);
             account->bd_books.erase(it);
             cout << "Book returned successfully." << endl;
@@ -212,6 +293,11 @@ class student:public User{
             finerate=10;
         }
         student(string name,string id):User(name,id, "Student"){
+            maxbooks=3;
+            maxdays=15;
+            finerate=10;
+        }
+        student(string name,string id,int fineamt,time_t finecal):User(name,id, "Student",fineamt,finecal){
             maxbooks=3;
             maxdays=15;
             finerate=10;
@@ -233,6 +319,8 @@ class student:public User{
             
             bk->set_status("Borrowed");
             time_t now = time(0);
+            bk->set_borrowdate(now);
+            bk->set_returndate(now);
             account->bd_books.push_back(bk);
             cout << "Book borrowed successfully." << endl;
         }
@@ -242,6 +330,8 @@ class student:public User{
                 if (*it == bk) {
                     bk->set_status("Available");
                     account->calculate_fines(finerate);
+                    bk->set_borrowdate(0);
+                    bk->set_returndate(0);
                     account->get_br_history().push_back(bk);
                     account->bd_books.erase(it);
                     cout << "Book returned successfully." << endl;
@@ -256,83 +346,21 @@ class student:public User{
 
 
 
-class Account{
-    public:
-        vector<book*> bd_books;
-        vector<book*> br_history;
-        int fineamount;
-        time_t finecaldate;
 
-        Account(){
-            this->fineamount=0;
-            finecaldate=0;
-        }
-
-        vector<book*>& get_br_history() {return br_history;}
-        vector<book*>& get_bd_books() {return bd_books;}
-        int getFineAmount() const { return fineamount;}
-        time_t getFinecaldate() const { return finecaldate;}
-
-        void payFines(int finerate) {
-            calculate_fines(finerate);
-            cout<<"Amount to be paid is: "<< fineamount<<endl;
-            int x;
-            cout << "Enter amount to pay: ";
-            cin>>x;
-            fineamount -=x ;
-        }
-        void calculate_fines(int finerate){
-            time_t now=time(NULL);
-            finecaldate=now;
-            for(auto it: bd_books){
-                if(it->get_returndate()!=finecaldate){
-                    if(date_diff(it->get_borrowdate(),finecaldate)>15){
-                        if(date_diff(it->get_borrowdate(),it->get_returndate())>15){
-                            fineamount+=finerate*date_diff(it->get_returndate(),finecaldate);
-                        }
-                        else{
-                            fineamount+=finerate*(date_diff(it->get_borrowdate(),finecaldate)-15);
-                        }
-                    }
-                    }
-                it->set_returndate(finecaldate);
-            }
-        }
-        void showFines(int finerate) {
-            calculate_fines(finerate);
-            if (fineamount == 0) {
-                cout << "No fines." << endl;
-                return;
-            }
-            cout << "Fine anount: " << fineamount << " rupees." << endl;
-        }
-        void displayBorrowedBooks() const {
-            cout << "Borrowed Books:" << endl;
-            for (const auto& book : bd_books) {
-                book->displayInfo();
-            }
-        }
-        void displayBorrowHistory() const{
-            cout << "Brrowed Book History:" << endl;
-            for (const auto& book : br_history) {
-                book->displayInfo();
-            }
-        }
-};
 
 class library{
     protected:
         vector<book>books;
         vector<User*>users;
-        vector<librarian*>librarians;
+        vector<AllUser*>librarians;
     public:
         void addBook(const book& book) {books.push_back(book);}
         void addUser(User* user) { users.push_back(user);}
-        void addLibrarian(librarian* librarian) { librarians.push_back(librarian);}
+        void addLibrarian(AllUser* librarian) { librarians.push_back(librarian);}
 
         const vector<book>& getBooks() const {return books;}
         const vector<User*>& getUsers() const {return users;}
-        const vector<librarian*>& getLibrarians() const {return librarians;}
+        const vector<AllUser*>& getLibrarians() const {return librarians;}
 
         // const vector<Account>& getAccounts() const {return accounts;}
         book* findBookByTitle(const string& title) {
@@ -359,7 +387,7 @@ class library{
             }
             return nullptr;
         }
-        librarian* findLibrarianById(const string& user_id) {
+        AllUser* findLibrarianById(const string& user_id) {
             
             for (auto& librarian : librarians) {
                 if ( librarian->get_id()== user_id) {
@@ -369,12 +397,20 @@ class library{
             return nullptr;
         }
         void displayAllBooks() const {
+            if(books.size()==0){
+                cout<<"No books to display";
+                return;
+            }
             cout << "Library Books:" << endl;
             for (const auto& book : books) {
                 book.displayInfo();
             }
         }
         void displayAllUsers() const {
+            if(users.size()==0){
+                cout<<"No users to display"<<endl;
+                return;
+            }
             cout << "Library Users:" << endl;
             for (const auto& user : users) {
                 user->displayInfo();
@@ -386,28 +422,26 @@ class library{
         }
 };
 
-class librarian:public library{
+class librarian:public AllUser,public library{
     protected:
-        string name;
-        string id;
-        string role="Librarian";
     public:
         librarian(){}
         librarian(string name,string id){
             this->name=name;
             this->id=id;
+            this->role = "Librarian";
         }
 
-        void set_name(string x){name=x;}
-        void set_id(string x){id=x;}
-        void set_role(string x){role=x;}
-        string get_name(){ return name;}
-        string get_id(){ return id;}
-        string get_role(){ return role;}
+        // void set_name(string x){name=x;}
+        // void set_id(string x){id=x;}
+        // void set_role(string x){role=x;}
+        // string get_name(){ return name;}
+        // string get_id(){ return id;}
+        // string get_role(){ return role;}
 
-        virtual void displayInfo() const {
-            cout << "ID: " << id << ", Name: " << name << ", Role: " << role << endl;
-        }
+        // virtual void displayInfo() const {
+        //     cout << "Name: " << name << ", ID: " << id << ", Role: " << role << endl;
+        // }
 
 };
 
@@ -417,9 +451,9 @@ class librarian:public library{
 
 
 void saveLibraryState(const library& library) {
-    // Open the file in truncation mode to overwrite previous data
-    ofstream file("library.txt", ios::trunc);
-    if (!file.is_open()) {
+    // Open the file in truncation mode to erase previous data
+    ofstream file("library.txt", ios::out | ios::trunc);
+    if (!file) {
         cerr << "Failed to save library state." << endl;
         return;
     }
@@ -434,23 +468,28 @@ void saveLibraryState(const library& library) {
     // Save Students and Faculty
     for (const auto& user : library.getUsers()) {
         file << "User:" << user->get_name() << "," << user->get_id() << "," << user->get_role()
-        << "," << user->get_account()->getFineAmount() << "," << user->get_account()->getFinecaldate()<< endl;
+             << "," << user->get_account()->getFineAmount() << "," << user->get_account()->getFinecaldate() << endl;
     }
+
     // Save librarians
     for (const auto& librarian : library.getLibrarians()) {
-        file << "User:" << librarian->get_name() << "," << librarian->get_id() << "," << librarian->get_role();
+        file << "User:" << librarian->get_name() << "," << librarian->get_id() << "," << librarian->get_role() << endl;
     }
-    //Save accounts
+
+    // Save accounts (borrowed books and borrowing history)
     for (const auto& user : library.getUsers()) {
-        for(auto it: user->get_account()->get_bd_books() ){
-            file << "Borrowed Books:" <<user->get_id()<< "," << it->get_ISBN() << endl;
+        for (auto it : user->get_account()->get_bd_books()) {
+            file << "Borrowed Books:" << user->get_id() << "," << it->get_ISBN() << endl;
         }
-        for(auto it: user->get_account()->get_br_history() ){
-            file << "Borrowing History:" <<user->get_id()<< "," << it->get_ISBN() << endl;
+        for (auto it : user->get_account()->get_br_history()) {
+            file << "Borrowing History:" << user->get_id() << "," << it->get_ISBN() << endl;
         }
     }
+
+    file.flush(); // Ensure data is written
     file.close();
 }
+
 
 void loadLibraryState(library& library) {
     ifstream file("library.txt");
@@ -487,9 +526,9 @@ void loadLibraryState(library& library) {
             tokens.push_back(data);
 
             if (tokens[2] == "Student") {
-                library.addUser(new student(tokens[0],tokens[1]));
+                library.addUser(new student(tokens[0],tokens[1],stoi(tokens[3]),stol(tokens[4])));
             } else if (tokens[2] == "Faculty") {
-                library.addUser(new faculty(tokens[0],tokens[1]));
+                library.addUser(new faculty(tokens[0],tokens[1],stoi(tokens[3]),stol(tokens[4])));
             } else if (tokens[2] == "Librarian") {
                 library.addLibrarian(new librarian(tokens[0],tokens[1]));
             }
@@ -524,6 +563,23 @@ void loadLibraryState(library& library) {
 int main() {
     library lib;
     loadLibraryState(lib);
+    // lib.addBook(book("Book1", "Author1", "Publisher1", 2000, "ISBN1"));
+    // lib.addBook(book("Book2", "Author2", "Publisher2", 2001, "ISBN2"));
+    // lib.addBook(book("Book3", "Author3", "Publisher3", 2002, "ISBN3"));
+    // lib.addBook(book("Book4", "Author4", "Publisher4", 2003, "ISBN4"));
+    // lib.addBook(book("Book5", "Author5", "Publisher5", 2004, "ISBN5"));
+
+    // // Add initial users
+    // lib.addUser(new student("Student1","S1"));
+    // lib.addUser(new student( "Student2","S2"));
+    // lib.addUser(new student( "Student3","S3"));
+    // lib.addUser(new faculty( "Faculty1","F1"));
+    // lib.addUser(new faculty("Faculty2","F2"));
+    // lib.addLibrarian(new librarian( "Librarian1","L1"));
+
+    // // Save initial state
+    // saveLibraryState(lib);
+
     
     while (true) {
         cout << "Who are you?" << endl;
@@ -558,38 +614,37 @@ int main() {
         
         while (true) {
             cout << "\nMenu Options:" << endl;
-            cout << "1. Display all books" << endl;
+            cout << "1. Logout" << endl;
+            cout << "2. Display all books" << endl;
             
             if (choice == 1) { 
-                cout << "2. Display borrowed books" << endl;
-                cout << "3. Borrow a book" << endl;
-                cout << "4. Return a book" << endl;
-                cout << "5. Show fines" << endl;
-                cout << "6. Pay Fines"<<endl;
-                cout << "6. Logout" << endl;
+                
+                cout << "3. Display borrowed books" << endl;
+                cout << "4. Borrow a book" << endl;
+                cout << "5. Return a book" << endl;
+                cout << "6. Show fines" << endl;
+                cout << "7. Pay Fines"<<endl;
             } else if (choice == 2) {
-                cout << "2. Display borrowed books" << endl;
-                cout << "3. Borrow a book" << endl;
-                cout << "4. Return a book" << endl;
-                cout << "6. Logout" << endl;
+                cout << "3. Display borrowed books" << endl;
+                cout << "4. Borrow a book" << endl;
+                cout << "5. Return a book" << endl;
             } else if (choice == 3) {
-                cout << "2. Add a book" << endl;
-                cout << "3. Add a user" << endl;
-                cout << "6. Logout" << endl;
+                cout << "3. Add a book" << endl;
+                cout << "4. Add a user" << endl;
             }
             
             int option;
             cin >> option;
             
-            if (option == 6) break;
+            if (option == 1) break;
             
-            if (option == 1) {
+            if (option == 2) {
                 lib.displayAllBooks();
             } 
-            else if ((choice == 1 || choice == 2) && option == 2) {
+            else if ((choice == 1 || choice == 2) && option == 3) {
                 account->displayBorrowedBooks();
             } 
-            else if ((choice == 1 || choice == 2) && option == 3) {
+            else if ((choice == 1 || choice == 2) && option == 4) {
                 string bookTitle;
                 cout << "Enter book title to borrow: ";
                 cin.ignore();
@@ -598,7 +653,7 @@ int main() {
                 if (bk) user->borrowBook(bk);
                 else cout << "Book not found!" << endl;
             } 
-            else if ((choice == 1 || choice == 2) && option == 4) {
+            else if ((choice == 1 || choice == 2) && option == 5) {
                 string bookTitle;
                 cout << "Enter book title to return: ";
                 cin.ignore();
@@ -607,16 +662,16 @@ int main() {
                 if (bk) user->returnBook(bk);
                 else cout << "Book not found!" << endl;
             } 
-            else if (choice == 1 && option == 5) {
-                account->showFines(10);
+            else if (choice == 1 && option == 6) {
+                account->showFines(user->get_finerate());
             } 
-            else if (choice == 3 && option == 2) {
+            else if (choice == 3 && option == 3) {
                 book newBook;
                 newBook.inputbook();
                 lib.addBook(newBook);
                 cout << "Book added successfully!" << endl;
             } 
-            else if (choice == 3 && option == 3) {
+            else if (choice == 3 && option == 4) {
                 string name, id, role;
                 cout << "Enter Name: ";
                 cin.ignore();
