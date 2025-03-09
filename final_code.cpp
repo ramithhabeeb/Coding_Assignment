@@ -17,7 +17,20 @@ class book{
         time_t borroedate;
         time_t returndate;
     public:
-        book(){}
+        book(){
+            this->borroedate=0;
+            this->returndate=0;
+        }
+        book(string title, string author,string publisher, int year, string ISBN,string status,time_t borrowdate,time_t returndate){
+            this->title=title;
+            this->author=author;
+            this->publisher=publisher;
+            this->year=year;
+            this->ISBN=ISBN;
+            this->status=status;
+            this->borroedate=borrowdate;
+            this->returndate=returndate;
+        }
         book(string title, string author,string publisher, int year, string ISBN,string status){
             this->title=title;
             this->author=author;
@@ -36,6 +49,7 @@ class book{
             this->ISBN=ISBN;
             this->status="Available";
             this->borroedate=0;
+            this->returndate=0;
         }
         string get_title() const{ return title;}
         string get_author() const{ return author;}
@@ -119,6 +133,11 @@ class User{
         string get_name(){ return name;}
         string get_id(){ return id;}
         string get_role(){ return role;}
+
+        virtual void displayInfo() const {
+            cout << "ID: " << id << ", Name: " << name << ", Role: " << role << endl;
+        }
+
         Account * get_account(){ return account;}
         
         User(string name, string id, string role){
@@ -128,7 +147,7 @@ class User{
             account = new Account();
         }
         User(){
-            this->account = new Account();
+            account = new Account();
         }
         
         virtual void borrowBook(book* book) = 0;
@@ -142,14 +161,14 @@ class User{
 class faculty:public User{
     public:
         faculty(){
-            int maxbooks=5;
-            int maxdays=30;
-            int finerate=0;
+            maxbooks=5;
+            maxdays=30;
+            finerate=0;
         }
         faculty(string name,string id):User(name,id, "Faculty"){
-            int maxbooks=5;
-            int maxdays=30;
-            int finerate=0;
+            maxbooks=5;
+            maxdays=30;
+            finerate=0;
         }
         int getmaxbooks(){return maxbooks;}
         int getmaxdays(){return maxdays;}
@@ -187,11 +206,15 @@ class faculty:public User{
 
 class student:public User{
     public:
-        student(){}
+        student(){
+            maxbooks=3;
+            maxdays=15;
+            finerate=10;
+        }
         student(string name,string id):User(name,id, "Student"){
-            int maxbooks=3;
-            int maxdays=15;
-            int finerate=10;
+            maxbooks=3;
+            maxdays=15;
+            finerate=10;
         }
         int getmaxbooks(){return maxbooks;}
         int getmaxdays(){return maxdays;}
@@ -240,15 +263,18 @@ class Account{
         int fineamount;
         time_t finecaldate;
 
-        Account(){this->fineamount=0;}
+        Account(){
+            this->fineamount=0;
+            finecaldate=0;
+        }
 
         vector<book*>& get_br_history() {return br_history;}
         vector<book*>& get_bd_books() {return bd_books;}
         int getFineAmount() const { return fineamount;}
         time_t getFinecaldate() const { return finecaldate;}
 
-        void payFines() {
-            calculate_fines;
+        void payFines(int finerate) {
+            calculate_fines(finerate);
             cout<<"Amount to be paid is: "<< fineamount<<endl;
             int x;
             cout << "Enter amount to pay: ";
@@ -298,11 +324,16 @@ class library{
     protected:
         vector<book>books;
         vector<User*>users;
+        vector<librarian*>librarians;
     public:
         void addBook(const book& book) {books.push_back(book);}
         void addUser(User* user) { users.push_back(user);}
+        void addLibrarian(librarian* librarian) { librarians.push_back(librarian);}
+
         const vector<book>& getBooks() const {return books;}
         const vector<User*>& getUsers() const {return users;}
+        const vector<librarian*>& getLibrarians() const {return librarians;}
+
         // const vector<Account>& getAccounts() const {return accounts;}
         book* findBookByTitle(const string& title) {
             for (auto& book : books) {
@@ -328,6 +359,15 @@ class library{
             }
             return nullptr;
         }
+        librarian* findLibrarianById(const string& user_id) {
+            
+            for (auto& librarian : librarians) {
+                if ( librarian->get_id()== user_id) {
+                    return librarian;
+                }
+            }
+            return nullptr;
+        }
         void displayAllBooks() const {
             cout << "Library Books:" << endl;
             for (const auto& book : books) {
@@ -339,17 +379,35 @@ class library{
             for (const auto& user : users) {
                 user->displayInfo();
             }
+            for (const auto& librarian : librarians) {
+                librarian->displayInfo();
+            }
+
         }
 };
 
-class librarian:public User,public library{
+class librarian:public library{
     protected:
         string name;
         string id;
-        string role;
+        string role="Librarian";
     public:
         librarian(){}
-        librarian(string name,string id,string email,string phone):User(name,id,"Librarian"){}
+        librarian(string name,string id){
+            this->name=name;
+            this->id=id;
+        }
+
+        void set_name(string x){name=x;}
+        void set_id(string x){id=x;}
+        void set_role(string x){role=x;}
+        string get_name(){ return name;}
+        string get_id(){ return id;}
+        string get_role(){ return role;}
+
+        virtual void displayInfo() const {
+            cout << "ID: " << id << ", Name: " << name << ", Role: " << role << endl;
+        }
 
 };
 
@@ -373,16 +431,14 @@ void saveLibraryState(const library& library) {
              << "," << book.get_returndate() << endl;
     }
 
-    // Save users
+    // Save Students and Faculty
     for (const auto& user : library.getUsers()) {
-        if(user->get_role()=="Librarian"){
-            file << "User:" << user->get_name() << "," << user->get_id() << "," << user->get_role()<< endl;
-        }
-        else{
-            file << "User:" << user->get_name() << "," << user->get_id() << "," << user->get_role()
-            << "," << user->get_account()->getFineAmount() << "," << user->get_account()->getFinecaldate()<< endl;
-        }
-        
+        file << "User:" << user->get_name() << "," << user->get_id() << "," << user->get_role()
+        << "," << user->get_account()->getFineAmount() << "," << user->get_account()->getFinecaldate()<< endl;
+    }
+    // Save librarians
+    for (const auto& librarian : library.getLibrarians()) {
+        file << "User:" << librarian->get_name() << "," << librarian->get_id() << "," << librarian->get_role();
     }
     //Save accounts
     for (const auto& user : library.getUsers()) {
@@ -416,7 +472,7 @@ void loadLibraryState(library& library) {
             }
             tokens.push_back(data);
 
-            book book(tokens[0], tokens[1], tokens[2], stoi(tokens[3]), tokens[4],tokens[5]);
+            book book(tokens[0], tokens[1], tokens[2], stoi(tokens[3]), tokens[4],tokens[5],stol(tokens[6]),stol(tokens[7]));
             // book.set_status(tokens[5]);
             library.addBook(book);
         } else if (line.find("User:") == 0) {
@@ -435,7 +491,7 @@ void loadLibraryState(library& library) {
             } else if (tokens[2] == "Faculty") {
                 library.addUser(new faculty(tokens[0],tokens[1]));
             } else if (tokens[2] == "Librarian") {
-                library.addUser(new librarian(tokens[0],tokens[1]));
+                library.addLibrarian(new librarian(tokens[0],tokens[1]));
             }
         }else if (line.find("Borrowed Books") == 0) {
             string data = line.substr(14);
@@ -575,7 +631,7 @@ int main() {
                 } else if (role == "Faculty") {
                     lib.addUser(new faculty(name, id));
                 } else if (role == "Librarian") {
-                    lib.addUser(new librarian(name, id));
+                    lib.addLibrarian(new librarian(name, id));
                 } else {
                     cout << "Invalid role!" << endl;
                 }
