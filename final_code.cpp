@@ -432,16 +432,6 @@ class librarian:public AllUser,public library{
             this->role = "Librarian";
         }
 
-        // void set_name(string x){name=x;}
-        // void set_id(string x){id=x;}
-        // void set_role(string x){role=x;}
-        // string get_name(){ return name;}
-        // string get_id(){ return id;}
-        // string get_role(){ return role;}
-
-        // virtual void displayInfo() const {
-        //     cout << "Name: " << name << ", ID: " << id << ", Role: " << role << endl;
-        // }
 
 };
 
@@ -577,8 +567,8 @@ int main() {
     // lib.addUser(new faculty("Faculty2","F2"));
     // lib.addLibrarian(new librarian( "Librarian1","L1"));
 
-    // // Save initial state
-    // saveLibraryState(lib);
+    // Save initial state
+    saveLibraryState(lib);
 
     
     while (true) {

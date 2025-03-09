@@ -1,12 +1,12 @@
-Book:Book1,Author1,Publisher1,2000,ISBN1,Borrowed,0,1741532371
+Book:Book1,Author1,Publisher1,2000,ISBN1,Borrowed,1739145600,1741533402
 Book:Book2,Author2,Publisher2,2001,ISBN2,Available,0,0
 Book:Book3,Author3,Publisher3,2002,ISBN3,Available,0,0
 Book:Book4,Author4,Publisher4,2003,ISBN4,Available,0,0
 Book:Book5,Author5,Publisher5,2004,ISBN5,Available,0,0
-User:Student1,S1,Student,0,0
-User:Student2,S2,Student,201410,1741532371
+User:Student1,S1,Student,0,1741533408
+User:Student2,S2,Student,0,0
 User:Student3,S3,Student,0,0
 User:Faculty1,F1,Faculty,0,0
 User:Faculty2,F2,Faculty,0,0
 User:Librarian1,L1,Librarian
-Borrowed Books:S2,ISBN1
+Borrowed Books:S1,ISBN1
