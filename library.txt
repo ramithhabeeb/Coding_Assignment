@@ -1,4 +1,4 @@
-Book:Book1,Author1,Publisher1,2000,ISBN1,Borrowed,1739145600,1741533402
+Book:Book1,Author1,Publisher1,2000,ISBN1,Available,0,0
 Book:Book2,Author2,Publisher2,2001,ISBN2,Available,0,0
 Book:Book3,Author3,Publisher3,2002,ISBN3,Available,0,0
 Book:Book4,Author4,Publisher4,2003,ISBN4,Available,0,0
