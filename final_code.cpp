@@ -502,10 +502,8 @@ void loadLibraryState(library& library) {
             tokens.push_back(data);
 
             book book(tokens[0], tokens[1], tokens[2], stoi(tokens[3]), tokens[4],tokens[5],stol(tokens[6]),stol(tokens[7]));
-            // book.set_status(tokens[5]);
             library.addBook(book);
         } else if (line.find("User:") == 0) {
-            // Parse user data
             string data = line.substr(5);
             size_t pos = 0;
             vector<string> tokens;
@@ -522,8 +520,9 @@ void loadLibraryState(library& library) {
             } else if (tokens[2] == "Librarian") {
                 library.addLibrarian(new librarian(tokens[0],tokens[1]));
             }
-        }else if (line.find("Borrowed Books") == 0) {
-            string data = line.substr(14);
+        }else if (line.find("Borrowed Books:") == 0) {
+
+            string data = line.substr(15);
             size_t pos = 0;
             vector<string> tokens;
             while ((pos = data.find(',')) != string::npos) {
@@ -532,8 +531,9 @@ void loadLibraryState(library& library) {
             }
             tokens.push_back(data);
             library.findUserById(tokens[0])->get_account()->get_bd_books().push_back(library.findBookByISBN(tokens[1]));
+
         }else if (line.find("Borrowing History:") == 0) {
-            string data = line.substr(14);
+            string data = line.substr(18);
             size_t pos = 0;
             vector<string> tokens;
             while ((pos = data.find(',')) != string::npos) {
@@ -551,8 +551,14 @@ void loadLibraryState(library& library) {
 
 
 int main() {
+    cout << "Program started" << endl;
     library lib;
-    loadLibraryState(lib);
+    try {
+        loadLibraryState(lib);
+    } catch (const std::exception& e) {
+        cerr << "Error: " << e.what() << endl;
+    }
+    
     // lib.addBook(book("Book1", "Author1", "Publisher1", 2000, "ISBN1"));
     // lib.addBook(book("Book2", "Author2", "Publisher2", 2001, "ISBN2"));
     // lib.addBook(book("Book3", "Author3", "Publisher3", 2002, "ISBN3"));
@@ -568,8 +574,8 @@ int main() {
     // lib.addLibrarian(new librarian( "Librarian1","L1"));
 
     // Save initial state
-    saveLibraryState(lib);
-
+    // saveLibraryState(lib);
+    cout << "Processing line: " << endl;
     
     while (true) {
         cout << "Who are you?" << endl;
